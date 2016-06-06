@@ -45,7 +45,6 @@ func (m *InterfaceManager) doSetupProfiles(task *state.Task, _ *tomb.Tomb) error
 		return err
 	}
 	snap.AddImplicitSlots(snapInfo)
-	snap.AddImplicitHooks(snapInfo)
 	snapName := snapInfo.Name()
 	var snapState snapstate.SnapState
 	if err := snapstate.Get(task.State(), snapName, &snapState); err != nil {
