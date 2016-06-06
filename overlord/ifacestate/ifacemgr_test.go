@@ -196,8 +196,12 @@ func (s *interfaceManagerSuite) mockIface(c *C, iface interfaces.Interface) {
 }
 
 func (s *interfaceManagerSuite) mockSnap(c *C, yamlText string) *snap.Info {
+	return s.mockSnapWithHooks(c, yamlText, nil)
+}
+
+func (s *interfaceManagerSuite) mockSnapWithHooks(c *C, yamlText string, hookNames []string) *snap.Info {
 	sideInfo := &snap.SideInfo{}
-	snapInfo := snaptest.MockSnap(c, yamlText, sideInfo)
+	snapInfo := snaptest.MockSnapWithHooks(c, yamlText, sideInfo, hookNames)
 
 	s.state.Lock()
 	defer s.state.Unlock()
@@ -296,6 +300,19 @@ version: 1
 slots:
  slot:
   interface: test
+`
+
+var hookYaml = `
+name: consumer
+version: 1
+hooks:
+ hook:
+  plugs: [test]
+`
+
+var vanillaYaml = `
+name: vanilla
+version: 1
 `
 
 // The setup-profiles task will not auto-connect an plug that was previously
@@ -454,6 +471,37 @@ func (s *interfaceManagerSuite) TestDoSetupProfilesAddsImplicitSlots(c *C) {
 	// and is was a pain to update each time. This is correctly handled by the
 	// implicit slot tests in snap/implicit_test.go
 	c.Assert(len(slots) > 18, Equals, true)
+}
+
+// The setup-profiles task will add implicit hooks in the snap (i.e. hooks not
+// declared in the YAML but shipped in the snap).
+func (s *interfaceManagerSuite) TestDoSetupProfilesAddsImplicitHooks(c *C) {
+	// Initialize the manager.
+	mgr := s.manager(c)
+
+	// Add an OS snap.
+	snapInfo := s.mockSnapWithHooks(c, vanillaYaml, []string{"test-hook"})
+
+	// Run the setup-profiles task and let it finish.
+	change := s.addSetupSnapSecurityChange(c, &snapstate.SnapSetup{
+		Name: snapInfo.Name(), Revision: snapInfo.Revision})
+	mgr.Ensure()
+	mgr.Wait()
+	mgr.Stop()
+
+	s.state.Lock()
+	defer s.state.Unlock()
+
+	// Ensure that the task succeeded.
+	c.Assert(change.Status(), Equals, state.DoneStatus)
+
+	// Ensure that we loaded the implicit hook
+	hooks := s.secBackend.SetupCalls[0].SnapInfo.Hooks
+	c.Assert(len(hooks), Equals, 1, Commentf("Expected to have one hook"))
+	hook := hooks["test-hook"]
+	c.Assert(hook, NotNil, Commentf("Expected hooks to contain 'test-hook'"))
+	c.Check(hook.Name, Equals, "test-hook")
+	c.Check(hook.Plugs, IsNil)
 }
 
 func (s *interfaceManagerSuite) TestDoSetupSnapSecuirtyReloadsConnectionsWhenInvokedOnPlugSide(c *C) {
