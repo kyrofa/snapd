@@ -363,7 +363,17 @@ func ReadInfo(name string, si *SideInfo) (*Info, error) {
 		return nil, err
 	}
 
-	return infoFromSnapYamlWithSideInfo(meta, si)
+	info, err := infoFromSnapYamlWithSideInfo(meta, si)
+	if err != nil {
+		return nil, err
+	}
+
+	err = AddImplicitHooks(info)
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
 }
 
 // ReadInfoFromSnapFile reads the snap information from the given File
@@ -378,6 +388,8 @@ func ReadInfoFromSnapFile(snapf Container, si *SideInfo) (*Info, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	AddImplicitHooks(info)
 
 	err = Validate(info)
 	if err != nil {

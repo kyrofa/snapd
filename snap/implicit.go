@@ -90,7 +90,12 @@ func makeImplicitSlot(snapInfo *Info, ifaceName string) *SlotInfo {
 //
 // Existing hooks (i.e. ones defined in the YAML) are not changed; only missing
 // hooks are added.
-func AddImplicitHooks(snapInfo *Info) error {
+func AddImplicitHooks(snapInfo *Info, snapf Container) error {
+	var fileInfos []os.FileInfo
+	var err error
+	if snapf != nil {
+		fileInfos
+	}
 	// First of all, check to ensure the hooks directory exists. If it doesn't,
 	// it's not an error-- there's just nothing to do.
 	hooksDir := snapInfo.HooksDir()
