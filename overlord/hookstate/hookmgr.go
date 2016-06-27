@@ -24,11 +24,16 @@ package hookstate
 import (
 	"fmt"
 	"regexp"
+	"os/exec"
 
 	"gopkg.in/tomb.v2"
 
 	"github.com/snapcore/snapd/overlord/state"
 	"github.com/snapcore/snapd/snap"
+)
+
+var (
+	runCommand = doRunCommand
 )
 
 // HookManager is responsible for the maintenance of hooks in the system state.
@@ -143,13 +148,22 @@ func (m *HookManager) doRunHook(task *state.Task, tomb *tomb.Tomb) error {
 		return err
 	}
 
-	// TODO: Actually dispatch the hook.
+	_, err = runCommand("snap", "run", setup.Snap, "--hook", setup.Hook, "-r", setup.Revision.String())
+	if err != nil {
+		if handlerErr := handler.Error(err); handlerErr != nil {
+			return handlerErr
+		}
 
-	// Done with the hook. TODO: Check the result, if success call Done(), if
-	// error, call Error(). Since we have no hooks, for now we just call Done().
-	if err := handler.Done(); err != nil {
+		return err
+	}
+
+	if err = handler.Done(); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func doRunCommand(name string, args ...string) ([]byte, error) {
+	return exec.Command(name, args...).Output()
 }
