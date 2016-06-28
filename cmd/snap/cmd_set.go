@@ -71,5 +71,12 @@ func (x *cmdSet) Execute(args []string) error {
 }
 
 func applyConfig(snapName string, configValues map[string]string) error {
+	cli := Client()
+	id, err := cli.RunHook(snapName, "apply-config", configValues)
+	if err != nil {
+		return err
+	}
 
+	_, err = wait(cli, id)
+	return err
 }

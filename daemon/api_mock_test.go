@@ -98,3 +98,11 @@ slots:
   key: value
   label: label
 `
+
+var configYaml = `
+name: config-snap
+version: 1
+hooks:
+ apply-config:
+ check-config:
+`

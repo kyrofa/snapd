@@ -42,6 +42,7 @@ import (
 	"github.com/snapcore/snapd/logger"
 	"github.com/snapcore/snapd/osutil"
 	"github.com/snapcore/snapd/overlord/auth"
+	"github.com/snapcore/snapd/overlord/hookstate"
 	"github.com/snapcore/snapd/overlord/ifacestate"
 	"github.com/snapcore/snapd/overlord/snapstate"
 	"github.com/snapcore/snapd/overlord/state"
@@ -60,8 +61,7 @@ var api = []*Command{
 	findCmd,
 	snapsCmd,
 	snapCmd,
-	//FIXME: renenable config for GA
-	//snapConfigCmd,
+	snapConfigCmd,
 	interfacesCmd,
 	assertsCmd,
 	assertsFindManyCmd,
@@ -121,14 +121,12 @@ var (
 		GET:    getSnapInfo,
 		POST:   postSnap,
 	}
-	//FIXME: renenable config for GA
-	/*
-		snapConfigCmd = &Command{
-			Path: "/v2/snaps/{name}/config",
-			GET:  snapConfig,
-			PUT:  snapConfig,
-		}
-	*/
+
+	snapConfigCmd = &Command{
+		Path: "/v2/snaps/{name}/config",
+		GET:  getSnapConfig,
+		PUT:  setSnapConfig,
+	}
 
 	interfacesCmd = &Command{
 		Path:   "/v2/interfaces",
@@ -919,6 +917,39 @@ func appIconGet(c *Command, r *http.Request, user *auth.UserState) Response {
 	name := vars["name"]
 
 	return iconGet(c.d.overlord.State(), name)
+}
+
+func getSnapConfig(c *Command, r *http.Request, user *auth.UserState) Response {
+	return SyncResponse(nil, nil)
+}
+
+func setSnapConfig(c *Command, r *http.Request, user *auth.UserState) Response {
+	vars := muxVars(r)
+	snapName := vars["name"]
+
+	fmt.Println("snapname:", snapName)
+	fmt.Println(r)
+
+	var configValues map[string]interface{}
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&configValues); err != nil {
+		return BadRequest("cannot decode request body into config values: %v", err)
+	}
+
+	s := c.d.overlord.State()
+	s.Lock()
+	defer s.Unlock()
+
+	hookTaskSummary := fmt.Sprintf(i18n.G("Run apply-config hook for %s"), snapName)
+	task := hookstate.HookTask(s, hookTaskSummary, snapName, snap.Revision{}, "apply-config")
+	taskset := state.NewTaskSet(task)
+
+	change := s.NewChange("configure-snap", fmt.Sprintf("Setting config for %s", snapName))
+	change.AddAll(taskset)
+
+	s.EnsureBefore(0)
+
+	return AsyncResponse(nil, &Meta{Change: change.ID()})
 }
 
 // getInterfaces returns all plugs and slots.
