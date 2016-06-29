@@ -161,8 +161,12 @@ func snapRunHook(snapName, hookName, revision string) error {
 	}
 
 	hook := info.Hooks[hookName]
+
+	// Make sure this hook is valid for this snap. If not, don't run it. This
+	// isn't an error-- this will happen if a snap doesn't ship a system hook,
+	// for example.
 	if hook == nil {
-		return fmt.Errorf("cannot find hook %q in %q", hookName, snapName)
+		return nil
 	}
 
 	hookBinary := filepath.Join(info.HooksDir(), hook.Name)

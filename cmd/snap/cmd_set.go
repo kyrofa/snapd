@@ -21,23 +21,11 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/user"
-	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/jessevdk/go-flags"
 
 	"github.com/snapcore/snapd/i18n"
-	"github.com/snapcore/snapd/logger"
-	"github.com/snapcore/snapd/snap"
-	"github.com/snapcore/snapd/snap/snapenv"
-)
-
-var (
-	syscallExec = syscall.Exec
-	userCurrent = user.Current
 )
 
 type cmdSet struct {
@@ -72,7 +60,8 @@ func (x *cmdSet) Execute(args []string) error {
 
 func applyConfig(snapName string, configValues map[string]string) error {
 	cli := Client()
-	id, err := cli.RunHook(snapName, "apply-config", configValues)
+	config := map[string]interface{}{"config": configValues}
+	id, err := cli.SetConfig(snapName, config)
 	if err != nil {
 		return err
 	}

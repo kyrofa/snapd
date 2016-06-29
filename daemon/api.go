@@ -927,9 +927,6 @@ func setSnapConfig(c *Command, r *http.Request, user *auth.UserState) Response {
 	vars := muxVars(r)
 	snapName := vars["name"]
 
-	fmt.Println("snapname:", snapName)
-	fmt.Println(r)
-
 	var configValues map[string]interface{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&configValues); err != nil {

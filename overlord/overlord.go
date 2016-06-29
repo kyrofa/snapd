@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	"regexp"
 
 	"gopkg.in/tomb.v2"
 
@@ -113,6 +114,8 @@ func New() (*Overlord, error) {
 	o.hookMgr = hookMgr
 	o.stateEng.AddManager(o.hookMgr)
 
+	o.registerHookHandlers()
+
 	return o, nil
 }
 
@@ -146,6 +149,21 @@ func loadState(backend state.Backend) (*state.State, error) {
 		return nil, err
 	}
 	return s, nil
+}
+
+type foo struct{}
+func (f *foo) Before() error {return nil}
+func (f *foo) Done() error {return nil}
+func (f *foo) Error(err error) error {return nil}
+
+func hookHandler(context *hookstate.Context) hookstate.Handler {
+	return &foo{}
+}
+
+func (o *Overlord) registerHookHandlers() {
+	// Register for config hooks
+	o.hookMgr.Register(regexp.MustCompile("^apply-config$"), hookHandler)
+	o.hookMgr.Register(regexp.MustCompile("^check-config$"), hookHandler)
 }
 
 func (o *Overlord) ensureTimerSetup() {

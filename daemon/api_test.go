@@ -43,6 +43,7 @@ import (
 	"github.com/snapcore/snapd/osutil"
 	"github.com/snapcore/snapd/overlord/auth"
 	"github.com/snapcore/snapd/overlord/ifacestate"
+	"github.com/snapcore/snapd/overlord/hookstate"
 	"github.com/snapcore/snapd/overlord/snapstate"
 	"github.com/snapcore/snapd/overlord/state"
 	"github.com/snapcore/snapd/progress"
@@ -1744,12 +1745,25 @@ func snapList(rawSnaps interface{}) []map[string]interface{} {
 	return snaps
 }
 
-// Tests for POST /v2/snaps/{name}/config
+// Tests for PUT /v2/snaps/{name}/config
 
 func (s *apiSuite) TestSetConfig(c *check.C) {
 	d := s.daemon(c)
-
 	s.mockSnap(c, configYaml)
+
+	oldRunHook := hookstate.RunHook
+	defer func() {hookstate.RunHook = oldRunHook}()
+
+	// Mock the hook runner
+	var hookSnap string
+	var hookRevision snap.Revision
+	var hookName string
+	hookstate.RunHook = func(snap string, revision snap.Revision, hook string) ([]byte, error) {
+		hookSnap = snap
+		hookRevision = revision
+		hookName = hook
+		return nil, nil
+	}
 
 	d.overlord.Loop()
 	defer d.overlord.Stop()
@@ -1764,7 +1778,6 @@ func (s *apiSuite) TestSetConfig(c *check.C) {
 	s.vars = map[string]string{"name": "config-snap"}
 
 	rec := httptest.NewRecorder()
-	fmt.Println(snapConfigCmd)
 	snapConfigCmd.PUT(snapConfigCmd, req, nil).ServeHTTP(rec, req)
 	c.Check(rec.Code, check.Equals, 202)
 
@@ -1785,6 +1798,11 @@ func (s *apiSuite) TestSetConfig(c *check.C) {
 	err = chg.Err()
 	st.Unlock()
 	c.Assert(err, check.IsNil)
+
+	// Check that the apply-config hook was run correctly
+	c.Check(hookSnap, check.Equals, "config-snap")
+	c.Check(hookRevision, check.Equals, snap.R(0))
+	c.Check(hookName, check.Equals, "apply-config")
 }
 
 // Tests for GET /v2/interfaces

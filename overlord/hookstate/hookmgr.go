@@ -34,6 +34,10 @@ import (
 
 var (
 	runCommand = doRunCommand
+
+	// Function that actually runs a hook. Make public here for testing
+	// purposes.
+	RunHook = doRunHook
 )
 
 // HookManager is responsible for the maintenance of hooks in the system state.
@@ -148,8 +152,15 @@ func (m *HookManager) doRunHook(task *state.Task, tomb *tomb.Tomb) error {
 		return err
 	}
 
-	_, err = runCommand("snap", "run", setup.Snap, "--hook", setup.Hook, "-r", setup.Revision.String())
+	_, err = RunHook(setup.Snap, setup.Revision, setup.Hook)
 	if err != nil {
+		exitErr, ok := err.(*exec.ExitError)
+		if ok {
+			// "exit code 1" is not particularly helpful. So rewrite the error
+			// using stderr instead.
+			err = fmt.Errorf("%s", exitErr.Stderr)
+		}
+
 		if handlerErr := handler.Error(err); handlerErr != nil {
 			return handlerErr
 		}
@@ -162,6 +173,15 @@ func (m *HookManager) doRunHook(task *state.Task, tomb *tomb.Tomb) error {
 	}
 
 	return nil
+}
+
+func doRunHook(snapName string, revision snap.Revision, hookName string) ([]byte, error) {
+	revisionString := ""
+	if !revision.Unset() {
+		revisionString = revision.String()
+	}
+
+	return runCommand("snap", "run", snapName, "--hook", hookName, "-r", revisionString)
 }
 
 func doRunCommand(name string, args ...string) ([]byte, error) {
