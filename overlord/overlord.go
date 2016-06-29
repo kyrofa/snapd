@@ -24,9 +24,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
-	"regexp"
 
 	"gopkg.in/tomb.v2"
 
@@ -35,8 +35,8 @@ import (
 	"github.com/snapcore/snapd/osutil"
 
 	"github.com/snapcore/snapd/overlord/assertstate"
-	"github.com/snapcore/snapd/overlord/ifacestate"
 	"github.com/snapcore/snapd/overlord/hookstate"
+	"github.com/snapcore/snapd/overlord/ifacestate"
 	"github.com/snapcore/snapd/overlord/patch"
 	"github.com/snapcore/snapd/overlord/snapstate"
 	"github.com/snapcore/snapd/overlord/state"
@@ -152,9 +152,10 @@ func loadState(backend state.Backend) (*state.State, error) {
 }
 
 type foo struct{}
-func (f *foo) Before() error {return nil}
-func (f *foo) Done() error {return nil}
-func (f *foo) Error(err error) error {return nil}
+
+func (f *foo) Before() error         { return nil }
+func (f *foo) Done() error           { return nil }
+func (f *foo) Error(err error) error { return nil }
 
 func hookHandler(context *hookstate.Context) hookstate.Handler {
 	return &foo{}

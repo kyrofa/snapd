@@ -29,5 +29,5 @@ func (client *Client) SetConfig(snapName string, config map[string]interface{}) 
 	if err != nil {
 		return "", err
 	}
-	return client.doAsync("POST", "/v2/snaps/" + snapName + "/config", nil, nil, bytes.NewReader(b))
+	return client.doAsync("PUT", "/v2/snaps/"+snapName+"/config", nil, nil, bytes.NewReader(b))
 }

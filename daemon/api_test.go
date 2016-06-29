@@ -42,8 +42,8 @@ import (
 	"github.com/snapcore/snapd/interfaces"
 	"github.com/snapcore/snapd/osutil"
 	"github.com/snapcore/snapd/overlord/auth"
-	"github.com/snapcore/snapd/overlord/ifacestate"
 	"github.com/snapcore/snapd/overlord/hookstate"
+	"github.com/snapcore/snapd/overlord/ifacestate"
 	"github.com/snapcore/snapd/overlord/snapstate"
 	"github.com/snapcore/snapd/overlord/state"
 	"github.com/snapcore/snapd/progress"
@@ -1752,7 +1752,7 @@ func (s *apiSuite) TestSetConfig(c *check.C) {
 	s.mockSnap(c, configYaml)
 
 	oldRunHook := hookstate.RunHook
-	defer func() {hookstate.RunHook = oldRunHook}()
+	defer func() { hookstate.RunHook = oldRunHook }()
 
 	// Mock the hook runner
 	var hookSnap string

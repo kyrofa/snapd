@@ -23,8 +23,8 @@ package hookstate
 
 import (
 	"fmt"
-	"regexp"
 	"os/exec"
+	"regexp"
 
 	"gopkg.in/tomb.v2"
 

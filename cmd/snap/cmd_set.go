@@ -30,7 +30,7 @@ import (
 
 type cmdSet struct {
 	Positional struct {
-		Snap         string `positional-arg-name:"<snap name>" description:"the snap to configure (e.g. hello-world)"`
+		Snap         string   `positional-arg-name:"<snap name>" description:"the snap to configure (e.g. hello-world)"`
 		ConfigValues []string `positional-arg-name:"<config value>" description:"configuration value (key=value)" required:"1"`
 	} `positional-args:"yes" required:"yes"`
 }
