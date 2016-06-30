@@ -46,7 +46,7 @@ func init() {
 }
 
 func (x *cmdSet) Execute(args []string) error {
-	var configValues map[string]string
+	configValues := make(map[string]string)
 	for _, configValue := range x.Positional.ConfigValues {
 		parts := strings.SplitN(configValue, "=", 2)
 		if len(parts) != 2 {

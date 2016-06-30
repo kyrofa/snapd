@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	"gopkg.in/tomb.v2"
 
@@ -158,7 +159,7 @@ func (m *HookManager) doRunHook(task *state.Task, tomb *tomb.Tomb) error {
 		if ok {
 			// "exit code 1" is not particularly helpful. So rewrite the error
 			// using stderr instead.
-			err = fmt.Errorf("%s", exitErr.Stderr)
+			err = fmt.Errorf("%s", strings.Trim(string(exitErr.Stderr), " \n"))
 		}
 
 		if handlerErr := handler.Error(err); handlerErr != nil {

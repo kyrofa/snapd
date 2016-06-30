@@ -57,7 +57,7 @@ func (s *SnapSuite) TestSnapApplyConfigIntegration(c *check.C) {
 	s.mockSetConfigServer(c)
 
 	// Set a config value for the active snap
-	err := snapset.ApplyConfig("snapname", map[string]string{"key": "value"})
+	_, err := snapset.Parser().ParseArgs([]string{"set", "snapname", "key=value"})
 	c.Assert(err, check.IsNil)
 }
 
