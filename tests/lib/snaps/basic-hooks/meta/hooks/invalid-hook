@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo "It shouldn't be possible to call me"

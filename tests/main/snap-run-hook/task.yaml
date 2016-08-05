@@ -1,0 +1,17 @@
+summary: Check that `snap run` can actually run hooks
+
+prepare: |
+    snapbuild $TESTSLIB/snaps/basic-hooks .
+    snap install basic-hooks_1.0_all.snap
+
+restore: |
+    rm basic-hooks_1.0_all.snap
+
+execute: |
+    cd /home/test/
+    echo "Test that snap run can call valid hooks"
+    snap run --hook=apply-config basic-hooks || exit 1
+    snap run --hook=check-config basic-hooks || exit 1
+
+    echo "Test that snap run cannot call invalid hooks"
+    snap run --hook=invalid-hook basic-hooks && exit 1
