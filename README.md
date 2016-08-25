@@ -124,8 +124,8 @@ from https://github.com/snapcore/spread. It can be installed via:
 
 Then setup the environment via:
 
-    $ mkdir -p .spread/qemu
-    $ cd .spread/qemu
+    $ mkdir -p ~/.spread/qemu
+    $ cd ~/.spread/qemu
     $ adt-buildvm-ubuntu-cloud
     $ mv adt-xenial-amd64-cloud.img ubuntu-16.04.img
 
